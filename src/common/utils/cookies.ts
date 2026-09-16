@@ -13,11 +13,11 @@ export function parseCookies(header?: string | null) {
   return out;
 }
 
-export function cookieOptions(maxAge = 7 * 24 * 60 * 60) {
+export function cookieOptions(maxAge = 900) {
   return {
     httpOnly: true,
     path: "/",
-    sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+    sameSite: "lax" as "none" | "lax",
     secure: isProd,
     maxAge,
     ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
@@ -33,7 +33,7 @@ export function serializeCookie(
   if (opts.httpOnly) parts.push("HttpOnly");
   if (opts.secure) parts.push("Secure");
   if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`);
-  if (opts.maxAge) parts.push(`Max-Age=${opts.maxAge}`);
+  if (opts.maxAge !== undefined) parts.push(`Max-Age=${opts.maxAge}`);
   if (opts.domain) parts.push(`Domain=${opts.domain}`);
   return parts.join("; ");
 }

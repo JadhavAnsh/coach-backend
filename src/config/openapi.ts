@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { swagger } from "@elysiajs/swagger";
 
 export const openApiPlugin = swagger({

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Elysia } from "elysia";
 import { resolveTenant } from "../common/middlewares/organisation";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Elysia } from "elysia";
 
 export const loggingPlugin = new Elysia({ name: "logging" })

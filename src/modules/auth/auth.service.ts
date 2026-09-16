@@ -3,10 +3,7 @@ import { IUserRole } from "../../common/schema/enum";
 import { AppError } from "../../common/filters/http-exception";
 import { setUserRolesCache } from "../../common/guards/roles";
 import type { UserDoc } from "../../db/models/user";
-import { SignJWT } from "jose";
-import { env } from "../../config/env";
-
-const secret = new TextEncoder().encode(env.JWT_SECRET);
+import { issueSession, activeUser } from "./session";
 
 export function toPublicUser(user: UserDoc) {
   return {
@@ -17,13 +14,6 @@ export function toPublicUser(user: UserDoc) {
     roles: user.roles,
     is_active: user.is_active,
   };
-}
-
-export async function signAccessToken(user_uid: string, email: string) {
-  return new SignJWT({ user_uid, email })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .sign(secret);
 }
 
 export async function registerUser(
@@ -49,8 +39,8 @@ export async function registerUser(
   });
 
   await setUserRolesCache(orgId, user.uid, [IUserRole.member]);
-  const accessToken = await signAccessToken(user.uid, user.email);
-  return { accessToken, user: toPublicUser(user) };
+  const session = await issueSession(orgId, user.uid);
+  return { ...session, user: toPublicUser(user) };
 }
 
 export async function signInUser(
@@ -69,14 +59,17 @@ export async function signInUser(
   if (!ok) {
     throw new AppError(401, "Invalid email or password", "INVALID_CREDENTIALS");
   }
-  const accessToken = await signAccessToken(user.uid, user.email);
-  return { accessToken, user: toPublicUser(user) };
+  const session = await issueSession(orgId, user.uid);
+  return { ...session, user: toPublicUser(user) };
+}
+
+export async function accountExists(orgId: string, email: string) {
+  const User = getUserModel(orgId);
+  return Boolean(await User.exists({ email: email.toLowerCase() }));
 }
 
 export async function getMe(orgId: string, uid: string) {
-  const user = await getUserModel(orgId).findOne({ uid });
-  if (!user) throw new AppError(404, "User not found", "USER_NOT_FOUND");
-  return toPublicUser(user);
+  return toPublicUser(await activeUser(orgId, uid));
 }
 
 export async function upsertOAuthUser(
@@ -122,6 +115,6 @@ export async function upsertOAuthUser(
     if (!user.name.first && input.firstName) user.name.first = input.firstName;
     await user.save();
   }
-  const accessToken = await signAccessToken(user.uid, user.email);
-  return { accessToken, user: toPublicUser(user) };
+  const session = await issueSession(orgId, user.uid);
+  return { ...session, user: toPublicUser(user) };
 }

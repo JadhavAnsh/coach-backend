@@ -4,6 +4,14 @@ const empty = z.string().optional().default("");
 
 export const env = z
   .object({
+    SITE_URL: z.string().url().default("http://localhost:3000"),
+    DEEPGRAM_API_KEY: empty,
+    GEMINI_API_KEY: empty,
+    DEEPGRAM_MODEL: z.string().default("nova-3"),
+    GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
+    PROVIDER_MODE: z.enum(["live", "mock"]).default("live"),
+    MAX_SESSION_SECONDS: z.coerce.number().positive().max(1800).default(1800),
+    DAILY_AUDIO_SECONDS: z.coerce.number().positive().default(7200),
     PORT: z.coerce.number().default(8000),
     NODE_ENV: z
       .enum(["development", "production", "test", "local_development"])

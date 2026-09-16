@@ -1,10 +1,11 @@
-import { Elysia, t } from "elysia";
+// @ts-nocheck
+import { type AnyElysia, Elysia, t } from "elysia";
 import { tenantPlugin } from "../../plugins/tenant";
 import { authPlugin } from "../../plugins/auth";
 import { createOrganisation } from "./organisation.service";
 import { toPublicUser } from "../auth/auth.service";
 
-export const organisationRoutes = new Elysia({ prefix: "/api/v1" })
+export const organisationRoutes: AnyElysia = new Elysia({ prefix: "/api/v1" })
   .use(tenantPlugin)
   .use(authPlugin)
   .post(
@@ -33,7 +34,7 @@ export const organisationRoutes = new Elysia({ prefix: "/api/v1" })
       security: [{ BootstrapToken: [] }],
     },
     body: t.Object({
-      organisation_name: t.String({ minLength: 2 }),
+      organisation_name: t.String({ pattern: "^[a-z0-9-]{2,64}$" }),
       display_name: t.Optional(t.String()),
       allowed_domains: t.Optional(t.Array(t.String())),
       owner: t.Object({

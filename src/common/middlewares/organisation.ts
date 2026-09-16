@@ -8,7 +8,12 @@ import {
   cookieOptions,
 } from "../utils/cookies";
 
-const EXACT_EXEMPT = new Set(["/", "/api/v1/health"]);
+const EXACT_EXEMPT = new Set([
+  "/",
+  "/api/v1/health",
+  "/api/v1/auth/desktop-exchange",
+  "/api/v1/auth/refresh",
+]);
 function isOauthPath(path: string) {
   return /\/auth\/(google|github|microsoft)(\/callback)?$/.test(path);
 }
@@ -73,14 +78,21 @@ export async function resolveTenant(opts: {
   }
 
   const apiKey = opts.headers.api_key || opts.headers.API_KEY;
-  if (!apiKey) throw new AppError(403, "API key required", "API_KEY_REQUIRED");
-  if (apiKey !== env.API_KEY) {
+  const bearerRoute =
+    /^Bearer /i.test(opts.headers.authorization || "") &&
+    (opts.path.startsWith("/api/v1/sessions") ||
+      ["/api/v1/auth/me", "/api/v1/auth/sign-out"].includes(opts.path));
+  if (!bearerRoute && !apiKey)
+    throw new AppError(403, "API key required", "API_KEY_REQUIRED");
+  if (!bearerRoute && apiKey !== env.API_KEY) {
     throw new AppError(403, "API key is invalid", "API_KEY_INVALID");
   }
   if (!organisationId) {
     throw new AppError(400, "X-TENANT-ID not provided", "TENANT_REQUIRED");
   }
 
+  if (!/^[a-z0-9-]{1,64}$/.test(organisationId))
+    throw new AppError(400, "Invalid tenant", "TENANT_INVALID");
   const organisation = await getOrganisationData(organisationId);
   if (!organisation.is_active) {
     throw new AppError(403, "Organisation is not active", "ORG_INACTIVE");

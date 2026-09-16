@@ -1,49 +1,45 @@
 import Redis from "ioredis";
 import { env } from "../config/env";
-import { RedisCacheExpiry } from "../common/utils/redis-cache-expiry";
 
-class RedisCache {
-  private client: Redis;
-
-  constructor() {
-    this.client = new Redis({
-      host: env.REDIS_HOST,
-      port: env.REDIS_PORT,
-      password: env.REDIS_PASSWORD || undefined,
-      retryStrategy: () => 2000,
-      lazyConnect: true,
-    });
-    this.client.on("error", (err: Error & { code?: string }) => {
-      console.warn(
-        `[redis] connection error (${err.code ?? err.message}) — reconnecting`,
-      );
-    });
-  }
-
-  async get(key: string) {
+export const redis = new Redis({
+  host: env.REDIS_HOST,
+  port: env.REDIS_PORT,
+  password: env.REDIS_PASSWORD || undefined,
+  lazyConnect: true,
+  connectTimeout: 2000,
+  commandTimeout: 3000,
+  maxRetriesPerRequest: 1,
+  retryStrategy: () => 2000,
+});
+redis.on("error", () => console.warn("Redis unavailable"));
+export const key = (...parts: string[]) =>
+  ["coach", env.NODE_ENV, ...parts].join(":");
+export const redisCache = {
+  async get(k: string) {
     try {
-      return await this.client.get(key);
+      return await redis.get(key("cache", k));
     } catch {
       return null;
     }
-  }
-
-  async set(key: string, value: string, expireInSeconds?: number) {
+  },
+  async set(k: string, v: string, ttl = 300) {
     try {
-      const ttl = expireInSeconds ?? RedisCacheExpiry;
-      await this.client.set(key, value, "EX", ttl);
+      await redis.set(key("cache", k), v, "EX", ttl);
     } catch {
-      // cache miss path continues without Redis
+      /* Optional cache. */
     }
-  }
-
-  async del(key: string) {
+  },
+  async del(k: string) {
     try {
-      await this.client.del(key);
+      await redis.del(key("cache", k));
     } catch {
-      // ignore
+      /* Optional cache. */
     }
-  }
-}
-
-export const redisCache = new RedisCache();
+  },
+  async setRequired(k: string, v: string, ttl: number) {
+    await redis.set(key(k), v, "EX", ttl);
+  },
+  async take(k: string) {
+    return redis.getdel(key(k));
+  },
+};

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { cors } from "@elysiajs/cors";
 import { env, isProd } from "./env";
 

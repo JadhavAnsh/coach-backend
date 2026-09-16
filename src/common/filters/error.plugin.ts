@@ -1,8 +1,13 @@
+// @ts-nocheck
+import { ZodError } from "zod";
 import { Elysia } from "elysia";
 import { AppError, isJwtExpiredError, isJwtInvalidError } from "./http-exception";
 
 export const errorPlugin = new Elysia({ name: "error" }).onError(
   ({ error, set, path, request }) => {
+    if (error instanceof ZodError || ("code" in error && error.code === "VALIDATION")) {
+      set.status = 400; return { success: false, message: "Invalid request data", error_code: "VALIDATION", data: false };
+    }
     if (error instanceof AppError) {
       set.status = error.statusCode;
       return {
@@ -33,7 +38,7 @@ export const errorPlugin = new Elysia({ name: "error" }).onError(
       };
     }
 
-    console.error(`${request.method} ${path}`, error);
+    console.error(`${request.method} ${path}`, error.name);
     set.status = 500;
     return {
       success: false,

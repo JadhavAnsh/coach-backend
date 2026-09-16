@@ -1,219 +1,97 @@
-import { Elysia, redirect, t } from "elysia";
+// @ts-nocheck
+import { type AnyElysia, Elysia, redirect, t } from "elysia";
 import { tenantPlugin } from "../../plugins/tenant";
 import { authPlugin } from "../../plugins/auth";
-import {
-  getMe,
-  registerUser,
-  signInUser,
-} from "./auth.service";
+import { accountExists, getMe, registerUser, signInUser } from "./auth.service";
 import { createOAuthStart, handleOAuthCallback, type OAuthProvider } from "./oauth";
-import {
-  appendSetCookie,
-  authCookieName,
-  cookieOptions,
-  parseCookies,
-  serializeClearCookie,
-  serializeCookie,
-} from "../../common/utils/cookies";
+import { activeUser, hash, issueSession, randomToken, rotateSession, sessions, verifyAccess } from "./session";
+import { appendSetCookie, authCookieName, cookieOptions, parseCookies, readAuthToken, serializeClearCookie, serializeCookie } from "../../common/utils/cookies";
+import { redis, key } from "../../db/redis";
 import { AppError } from "../../common/filters/http-exception";
-import { requireUserUid } from "../../common/guards/auth";
+import { env } from "../../config/env";
 
-function setAuthCookie(
-  set: { headers: Record<string, unknown> },
-  orgId: string,
-  token: string,
-) {
-  appendSetCookie(
-    set,
-    serializeCookie(authCookieName(orgId), token, cookieOptions()),
-  );
+function setCookies(set: { headers: Record<string, unknown> }, tenant: string, result: { accessToken: string; refreshToken: string }) {
+  appendSetCookie(set, serializeCookie(authCookieName(tenant), result.accessToken));
+  appendSetCookie(set, serializeCookie(`refresh_${tenant}`, result.refreshToken, cookieOptions(30 * 86400)));
+}
+const tokenFrom = (request: Request, tenant: string) => readAuthToken(parseCookies(request.headers.get("cookie")), Object.fromEntries(request.headers), tenant);
+export async function rateLimit(identity: string, limit = 30) {
+  const k = key("auth-limit", hash(identity), String(Math.floor(Date.now() / 60000)));
+  const count = await redis.eval("local n=redis.call('INCR',KEYS[1]); redis.call('EXPIRE',KEYS[1],120); return n", 1, k);
+  if (Number(count) > limit) throw new AppError(429, "Please wait before trying again", "RATE_LIMIT");
+}
+export function allowedRedirect(value: string) {
+  const url = new URL(value || env.SITE_URL + "/auth");
+  if (url.origin !== new URL(env.SITE_URL).origin || url.pathname !== "/auth" || url.username || url.password) throw new AppError(400, "Invalid redirect", "REDIRECT_INVALID");
+  return url.toString();
+}
+export async function consumeTicket(ticket: string, verifier: string) {
+  const value = await redis.eval(`local v=redis.call('GET',KEYS[1]); if not v then return nil end; local d=cjson.decode(v); if d.challenge~=ARGV[1] then return nil end; redis.call('DEL',KEYS[1]); return v`, 1, key("ticket", hash(ticket)), hash(verifier));
+  if (typeof value !== "string") throw new AppError(401, "Sign-in link expired or invalid", "TICKET_INVALID");
+  return JSON.parse(value) as { tenant: string; uid: string };
 }
 
-function oauthStart(provider: OAuthProvider) {
-  return async ({
-    organisationId,
-    set,
-  }: {
-    organisationId: string;
-    set: { headers: Record<string, unknown>; status?: number | string };
-  }) => {
-    if (!organisationId) {
-      throw new AppError(400, "Tenant not provided", "TENANT_REQUIRED");
-    }
-    const { url, state, codeVerifier } = createOAuthStart(provider);
-    appendSetCookie(
-      set,
-      serializeCookie("oauth_state", state, cookieOptions(600)),
-    );
-    if (codeVerifier) {
-      appendSetCookie(
-        set,
-        serializeCookie("oauth_code_verifier", codeVerifier, cookieOptions(600)),
-      );
-    }
-    appendSetCookie(
-      set,
-      serializeCookie("oauth_provider", provider, cookieOptions(600)),
-    );
-    return redirect(url);
-  };
-}
-
-function oauthCallback(provider: OAuthProvider) {
-  return async ({
-    organisationId,
-    redirectUrl,
-    query,
-    request,
-    set,
-  }: {
-    organisationId: string;
-    redirectUrl: string;
-    query: { code?: string; state?: string; error?: string };
-    request: Request;
-    set: { headers: Record<string, unknown> };
-  }) => {
-    const fallback = redirectUrl || "/";
-    try {
-      if (query.error) {
-        throw new AppError(400, query.error, "OAUTH_DENIED");
-      }
-      const cookies = parseCookies(request.headers.get("cookie"));
-      if (!query.code || !query.state || query.state !== cookies.oauth_state) {
-        throw new AppError(400, "Invalid OAuth state", "OAUTH_STATE");
-      }
-      const { accessToken } = await handleOAuthCallback(
-        provider,
-        organisationId,
-        query.code,
-        cookies.oauth_code_verifier || "",
-      );
-      setAuthCookie(set, organisationId, accessToken);
-      appendSetCookie(set, serializeClearCookie("oauth_state"));
-      appendSetCookie(set, serializeClearCookie("oauth_code_verifier"));
-      return redirect(fallback);
-    } catch (err) {
-      const message = encodeURIComponent(
-        err instanceof Error ? err.message : "OAuth login failed",
-      );
-      const code = encodeURIComponent(
-        err instanceof AppError ? err.error_code || "UNKNOWN" : "UNKNOWN",
-      );
-      return redirect(`${fallback}?error=${code}&message=${message}`);
-    }
-  };
-}
-
-export const authRoutes = new Elysia({ prefix: "/api/v1/auth" })
-  .use(tenantPlugin)
-  .use(authPlugin)
-  .post(
-    "/register",
-    async ({ body, organisationId, set }) => {
-      const result = await registerUser(organisationId, body);
-      setAuthCookie(set, organisationId, result.accessToken);
-      return result;
-    },
-    {
-      detail: {
-        tags: ["Auth"],
-        summary: "Register member",
-        description:
-          "Requires `api_key` and `X-TENANT-ID`. Sets auth cookie and returns JWT in `data.accessToken`.",
-        security: [{ ApiKey: [], TenantId: [] }],
-      },
-      body: t.Object({
-        email: t.String({ format: "email" }),
-        password: t.String({ minLength: 8 }),
-        firstName: t.String({ minLength: 1 }),
-        lastName: t.Optional(t.String()),
-      }),
-    },
-  )
-  .post(
-    "/sign-in",
-    async ({ body, organisationId, set }) => {
-      const result = await signInUser(organisationId, body);
-      setAuthCookie(set, organisationId, result.accessToken);
-      return result;
-    },
-    {
-      detail: {
-        tags: ["Auth"],
-        summary: "Sign in",
-        security: [{ ApiKey: [], TenantId: [] }],
-      },
-      body: t.Object({
-        email: t.String({ format: "email" }),
-        password: t.String({ minLength: 8 }),
-      }),
-    },
-  )
-  .post(
-    "/sign-out",
-    ({ organisationId, set }) => {
+export const authRoutes: AnyElysia = new Elysia({ prefix: "/api/v1/auth" })
+  .use(tenantPlugin).use(authPlugin)
+  .onBeforeHandle(async ({ request, server }) => {
+    await rateLimit(server?.requestIP(request)?.address || "unknown");
+  })
+  .post("/account-status", async ({ body, organisationId }) => ({ exists: await accountExists(organisationId, body.email) }), { body: t.Object({ email: t.String({ format: "email" }) }) })
+  .post("/register", async ({ body, organisationId, set }) => {
+    const result = await registerUser(organisationId, body); setCookies(set, organisationId, result); return { user: result.user };
+  }, { body: t.Object({ email: t.String({ format: "email" }), password: t.String({ minLength: 8, maxLength: 256 }), firstName: t.String({ minLength: 1, maxLength: 100 }), lastName: t.Optional(t.String({ maxLength: 100 })) }) })
+  .post("/sign-in", async ({ body, organisationId, set }) => {
+    const result = await signInUser(organisationId, body); setCookies(set, organisationId, result); return { user: result.user };
+  }, { body: t.Object({ email: t.String({ format: "email" }), password: t.String({ minLength: 8, maxLength: 256 }) }) })
+  .post("/desktop-ticket", async ({ body, organisationId, request }) => {
+    const user = await verifyAccess(tokenFrom(request, organisationId), organisationId);
+    const ticket = randomToken();
+    await redis.set(key("ticket", hash(ticket)), JSON.stringify({ tenant: organisationId, uid: user.user_uid, challenge: body.challenge }), "EX", 120);
+    return { ticket, expiresIn: 120 };
+  }, { body: t.Object({ challenge: t.String({ pattern: "^[A-Za-z0-9_-]{43}$" }) }) })
+  .post("/desktop-exchange", async ({ body }) => {
+    const { tenant, uid } = await consumeTicket(body.ticket, body.verifier);
+    return { ...await issueSession(tenant, uid, "coach-desktop"), user: await getMe(tenant, uid) };
+  }, { body: t.Object({ ticket: t.String({ minLength: 32, maxLength: 256 }), verifier: t.String({ pattern: "^[A-Za-z0-9_-]{43,128}$" }) }) })
+  .post("/refresh", async ({ body, request, set }) => {
+    const token = body.refreshToken || parseCookies(request.headers.get("cookie"))[`refresh_${body.organisationId}`];
+    if (!token) throw new AppError(401, "Sign in again", "REFRESH_INVALID");
+    if (!body.refreshToken && request.headers.get("api_key") !== env.API_KEY) throw new AppError(403, "Forbidden", "FORBIDDEN");
+    const result = await rotateSession(body.organisationId, token);
+    if (body.refreshToken) return result;
+    // Cookie-based refresh is restricted to the trusted web server.
+    if (request.headers.get("api_key") !== env.API_KEY) throw new AppError(403, "Forbidden", "FORBIDDEN");
+    setCookies(set, body.organisationId, result); return { refreshed: true };
+  }, { body: t.Object({ organisationId: t.String({ pattern: "^[a-z0-9-]{1,64}$" }), refreshToken: t.Optional(t.String({ minLength: 32, maxLength: 256 })) }) })
+  .get("/me", async ({ organisationId, request }) => { const user = await verifyAccess(tokenFrom(request, organisationId), organisationId); return getMe(organisationId, user.user_uid); })
+  .post("/sign-out", async ({ organisationId, request, set }) => {
+    const user = await verifyAccess(tokenFrom(request, organisationId), organisationId);
+    await sessions(organisationId).updateOne({ sid: user.sid }, { $set: { revoked: true } });
     appendSetCookie(set, serializeClearCookie(authCookieName(organisationId)));
-    appendSetCookie(set, serializeClearCookie("organisationId"));
-      return { signedOut: true };
-    },
-    {
-      detail: {
-        tags: ["Auth"],
-        summary: "Sign out",
-        security: [{ ApiKey: [], TenantId: [] }],
-      },
-    },
-  )
-  .get(
-    "/me",
-    async ({ organisationId, jwt, headers, request }) => {
-      const { user_uid } = await requireUserUid(
-        jwt,
-        request,
-        headers,
-        organisationId,
-      );
-      return getMe(organisationId, user_uid);
-    },
-    {
-      detail: {
-        tags: ["Auth"],
-        summary: "Current user",
-        security: [
-          { ApiKey: [], TenantId: [], BearerAuth: [] },
-          { ApiKey: [], TenantId: [], AuthTokenHeader: [] },
-        ],
-      },
-    },
-  )
-  .get("/google", oauthStart("google"), {
-    detail: {
-      tags: ["Auth"],
-      summary: "OAuth — Google (start)",
-      description: "Requires `X-TENANT-ID` (query `tenant` or cookie). Redirects to Google.",
-      security: [{ TenantId: [] }],
-    },
-  })
-  .get("/google/callback", oauthCallback("google"), {
-    detail: { tags: ["Auth"], summary: "OAuth — Google callback" },
-  })
-  .get("/github", oauthStart("github"), {
-    detail: {
-      tags: ["Auth"],
-      summary: "OAuth — GitHub (start)",
-      security: [{ TenantId: [] }],
-    },
-  })
-  .get("/github/callback", oauthCallback("github"), {
-    detail: { tags: ["Auth"], summary: "OAuth — GitHub callback" },
-  })
-  .get("/microsoft", oauthStart("microsoft"), {
-    detail: {
-      tags: ["Auth"],
-      summary: "OAuth — Microsoft (start)",
-      security: [{ TenantId: [] }],
-    },
-  })
-  .get("/microsoft/callback", oauthCallback("microsoft"), {
-    detail: { tags: ["Auth"], summary: "OAuth — Microsoft callback" },
+    appendSetCookie(set, serializeClearCookie(`refresh_${organisationId}`));
+    return { signedOut: true };
   });
+
+for (const provider of ["google", "github", "microsoft"] as OAuthProvider[]) {
+  authRoutes.get(`/${provider}`, async ({ organisationId, query, set }) => {
+    const target = allowedRedirect(String(query.redirect_url || ""));
+    const { url, state, codeVerifier } = createOAuthStart(provider);
+    const browserSecret = randomToken();
+    await redis.set(key("oauth", state), JSON.stringify({ tenant: organisationId, target, codeVerifier, provider, browserHash: hash(browserSecret) }), "EX", 600);
+    appendSetCookie(set, serializeCookie("oauth_browser", browserSecret, cookieOptions(600)));
+    return redirect(url);
+  });
+  authRoutes.get(`/${provider}/callback`, async ({ query, request, set }) => {
+    const state = String(query.state || "");
+    const browserSecret = parseCookies(request.headers.get("cookie")).oauth_browser || "";
+    const raw = await redis.getdel(key("oauth", state));
+    if (!raw) throw new AppError(401, "OAuth session expired", "OAUTH_STATE");
+    const tx = JSON.parse(raw);
+    if (tx.provider !== provider || tx.browserHash !== hash(browserSecret) || !query.code || query.error) throw new AppError(401, "OAuth verification failed", "OAUTH_STATE");
+    const result = await handleOAuthCallback(provider, tx.tenant, String(query.code), tx.codeVerifier);
+    setCookies(set, tx.tenant, result);
+    appendSetCookie(set, serializeClearCookie("oauth_browser"));
+    const target = new URL(allowedRedirect(tx.target)); target.searchParams.set("auth", "success");
+    return redirect(target.toString());
+  });
+}

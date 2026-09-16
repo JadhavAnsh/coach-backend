@@ -6,7 +6,6 @@ export const redisConnection = new Redis({
   port: env.REDIS_PORT,
   password: env.REDIS_PASSWORD || undefined,
   maxRetriesPerRequest: null,
-  lazyConnect: true,
 });
 
 redisConnection.on("error", (err: Error & { code?: string }) => {
