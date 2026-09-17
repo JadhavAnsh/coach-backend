@@ -5,15 +5,15 @@ Bun + Elysia API with multi-tenant organisations, JWT auth, and Redis-backed ten
 ## Prerequisites
 
 - [Bun](https://bun.sh)
-- MongoDB (connection string in `MONGO_URI`)
-- Redis (`REDIS_HOST` / `REDIS_PORT`)
+- MongoDB Atlas (connection string in `MONGO_URI`)
+- Redis installed locally on your Mac (`REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`)
 
 ## Setup
 
 ```bash
 cd coach-backend
 cp .env.example .env
-# Edit .env — at minimum: MONGO_URI, JWT_SECRET, API_KEY, ORG_BOOTSTRAP_TOKEN, EMAIL_ENCRYPTION_PASSWORD
+# Edit .env — set MONGO_URI to your Atlas connection string and supply JWT_SECRET, API_KEY, ORG_BOOTSTRAP_TOKEN, and EMAIL_ENCRYPTION_PASSWORD
 bun install
 bun run dev
 ```

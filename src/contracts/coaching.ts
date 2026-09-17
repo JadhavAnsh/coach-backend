@@ -9,6 +9,9 @@ export const Metric = z
     pitchHz: nullable,
     pitchVariation: nullable,
     loudnessDbfs: nullable,
+    loudnessVariation: nullable.optional(),
+    faceDetected: nullable.optional(),
+    handCount: nullable.optional(),
     shoulderTilt: nullable,
     headTilt: nullable,
     headTurn: nullable,
@@ -27,6 +30,7 @@ export const CreateSession = z
       "interview",
       "pitch",
       "presentation",
+      "product-demo",
       "conversation",
       "custom",
     ]),
@@ -60,11 +64,27 @@ const Feedback = z.object({
   text: z.string().min(1).max(1000),
   evidenceSeconds: z.array(z.number().min(0).max(1800)).min(1).max(5),
 });
+const Dimension = z.object({
+  id: z.enum(["voice", "pitch", "face", "hands", "shoulders", "posture"]),
+  label: z.string().min(1).max(60),
+  score: z.number().int().min(0).max(100).nullable(),
+  detail: z.string().min(1).max(600),
+  evidenceSeconds: z.array(z.number().min(0).max(1800)).max(5),
+});
 export const Report = z
   .object({
+    executiveSummary: z.string().min(1).max(1000),
+    overallScore: z.number().int().min(0).max(100).nullable(),
+    dimensions: z.array(Dimension).max(6),
     observations: z.array(Feedback).max(10),
     strengths: z.array(Feedback).max(3),
     improvements: z.array(Feedback).max(3),
+    strongestMoments: z.array(Feedback).max(3),
+    weakestMoments: z.array(Feedback).max(3),
+    transcriptEvidence: z.array(Feedback).max(5),
+    recommendations: z.array(z.string().min(1).max(500)).max(5),
+    practiceExercises: z.array(z.object({ title: z.string().min(1).max(120), instruction: z.string().min(1).max(600) })).max(5),
+    comparison: z.string().max(600).nullable(),
   })
   .strict();
 export const Summary = z.object({
@@ -75,6 +95,10 @@ export const Summary = z.object({
   fillerCount: nullable,
   averageLoudnessDbfs: nullable,
   pitchVariation: nullable,
+  voiceVariation: nullable,
+  faceTracking: nullable,
+  handUse: nullable,
+  shoulderTilt: nullable,
   postureMovement: nullable,
 });
 export const SessionView = CreateSession.extend({
@@ -106,8 +130,8 @@ export function summarize(
   transcript: TranscriptSegment[],
   transcriptComplete = true,
 ) {
-  const mean = (xs: (number | null)[]) => {
-    const v = xs.filter((n): n is number => n !== null);
+  const mean = (xs: (number | null | undefined)[]) => {
+    const v = xs.filter((n): n is number => typeof n === "number");
     return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
   };
   const knownSpeech = metrics.filter((m) => m.speechMs !== null);
@@ -146,6 +170,10 @@ export function summarize(
         ).length
       : null,
     averageLoudnessDbfs: mean(metrics.map((m) => m.loudnessDbfs)),
+    voiceVariation: mean(metrics.map((m) => m.loudnessVariation)),
+    faceTracking: mean(metrics.map((m) => m.faceDetected)),
+    handUse: mean(metrics.map((m) => m.handCount)),
+    shoulderTilt: mean(metrics.map((m) => m.shoulderTilt)),
     pitchVariation,
     postureMovement:
       turns.length > 1

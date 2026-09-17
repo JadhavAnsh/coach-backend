@@ -7,8 +7,7 @@
     "start": "bun run src/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.core.json --pretty false",
     "worker": "bun run src/worker.ts",
-    "contracts": "bun run scripts/generate-contracts.ts",
-    "db:init": "docker compose exec -T mongo mongosh --quiet --eval 'try { rs.status().ok } catch { rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"localhost:27017\"}]}) }' "
+    "contracts": "bun run scripts/generate-contracts.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.947.0",

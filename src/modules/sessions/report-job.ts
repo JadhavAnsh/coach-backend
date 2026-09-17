@@ -76,6 +76,7 @@ export async function runReport(
       );
     });
   } catch (error) {
+    console.warn("Report generation failed", id, error instanceof Error ? error.message : "Unknown error");
     const failed = attempt >= maxAttempts;
     await m.Session.updateOne(
       { id, revision, deleted: false, processingId: claim },

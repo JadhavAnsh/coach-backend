@@ -1,8 +1,10 @@
 import { app } from "./app";
 import { env } from "./config/env";
 import { connectMongo } from "./db/mongo";
+import { startReportWorker } from "./worker";
 
 await connectMongo();
+await startReportWorker();
 
 app.listen({
   port: env.PORT,

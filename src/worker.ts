@@ -6,6 +6,7 @@ import { models } from "./modules/sessions/models";
 import { REPORT_QUEUE, enqueue } from "./modules/sessions/queue";
 import { runReport } from "./modules/sessions/report-job";
 import { OrganisationModel } from "./db/models/organisation";
+export async function startReportWorker() {
 await connectMongo();
 const worker = new Worker(
   REPORT_QUEUE,
@@ -67,3 +68,6 @@ async function shutdown() {
 }
 process.on("SIGINT", () => void shutdown());
 process.on("SIGTERM", () => void shutdown());
+return worker;
+}
+if (import.meta.main) await startReportWorker();

@@ -27,6 +27,7 @@
               "interview",
               "pitch",
               "presentation",
+              "product-demo",
               "conversation",
               "custom"
             ]
@@ -126,6 +127,24 @@
                     "null"
                   ]
                 },
+                "loudnessVariation": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "faceDetected": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "handCount": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
                 "shoulderTilt": {
                   "type": [
                     "number",
@@ -212,6 +231,24 @@
             ]
           },
           "loudnessDbfs": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "loudnessVariation": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "faceDetected": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "handCount": {
             "type": [
               "number",
               "null"
@@ -325,6 +362,82 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
+          "executiveSummary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "overallScore": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dimensions": {
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "enum": [
+                    "voice",
+                    "pitch",
+                    "face",
+                    "hands",
+                    "shoulders",
+                    "posture"
+                  ]
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "score": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "detail": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 600
+                },
+                "evidenceSeconds": {
+                  "maxItems": 5,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1800
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "score",
+                "detail",
+                "evidenceSeconds"
+              ],
+              "additionalProperties": false
+            }
+          },
           "observations": {
             "maxItems": 10,
             "type": "array",
@@ -411,12 +524,152 @@
               ],
               "additionalProperties": false
             }
+          },
+          "strongestMoments": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "evidenceSeconds": {
+                  "minItems": 1,
+                  "maxItems": 5,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1800
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "evidenceSeconds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "weakestMoments": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "evidenceSeconds": {
+                  "minItems": 1,
+                  "maxItems": 5,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1800
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "evidenceSeconds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "transcriptEvidence": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "evidenceSeconds": {
+                  "minItems": 1,
+                  "maxItems": 5,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1800
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "evidenceSeconds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "recommendations": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          },
+          "practiceExercises": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "instruction": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 600
+                }
+              },
+              "required": [
+                "title",
+                "instruction"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
+          "executiveSummary",
+          "overallScore",
+          "dimensions",
           "observations",
           "strengths",
-          "improvements"
+          "improvements",
+          "strongestMoments",
+          "weakestMoments",
+          "transcriptEvidence",
+          "recommendations",
+          "practiceExercises",
+          "comparison"
         ],
         "additionalProperties": false
       },
@@ -463,6 +716,30 @@
               "null"
             ]
           },
+          "voiceVariation": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "faceTracking": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "handUse": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "shoulderTilt": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
           "postureMovement": {
             "type": [
               "number",
@@ -478,6 +755,10 @@
           "fillerCount",
           "averageLoudnessDbfs",
           "pitchVariation",
+          "voiceVariation",
+          "faceTracking",
+          "handUse",
+          "shoulderTilt",
           "postureMovement"
         ],
         "additionalProperties": false
@@ -502,6 +783,7 @@
               "interview",
               "pitch",
               "presentation",
+              "product-demo",
               "conversation",
               "custom"
             ]
@@ -613,6 +895,30 @@
                       "null"
                     ]
                   },
+                  "voiceVariation": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "faceTracking": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "handUse": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "shoulderTilt": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "postureMovement": {
                     "type": [
                       "number",
@@ -628,6 +934,10 @@
                   "fillerCount",
                   "averageLoudnessDbfs",
                   "pitchVariation",
+                  "voiceVariation",
+                  "faceTracking",
+                  "handUse",
+                  "shoulderTilt",
                   "postureMovement"
                 ],
                 "additionalProperties": false
@@ -642,6 +952,82 @@
               {
                 "type": "object",
                 "properties": {
+                  "executiveSummary": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "overallScore": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "dimensions": {
+                    "maxItems": 6,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "enum": [
+                            "voice",
+                            "pitch",
+                            "face",
+                            "hands",
+                            "shoulders",
+                            "posture"
+                          ]
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 60
+                        },
+                        "score": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "detail": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 600
+                        },
+                        "evidenceSeconds": {
+                          "maxItems": 5,
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1800
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "score",
+                        "detail",
+                        "evidenceSeconds"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
                   "observations": {
                     "maxItems": 10,
                     "type": "array",
@@ -728,12 +1114,152 @@
                       ],
                       "additionalProperties": false
                     }
+                  },
+                  "strongestMoments": {
+                    "maxItems": 3,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "evidenceSeconds": {
+                          "minItems": 1,
+                          "maxItems": 5,
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1800
+                          }
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "evidenceSeconds"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "weakestMoments": {
+                    "maxItems": 3,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "evidenceSeconds": {
+                          "minItems": 1,
+                          "maxItems": 5,
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1800
+                          }
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "evidenceSeconds"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "transcriptEvidence": {
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "evidenceSeconds": {
+                          "minItems": 1,
+                          "maxItems": 5,
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1800
+                          }
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "evidenceSeconds"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "recommendations": {
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 500
+                    }
+                  },
+                  "practiceExercises": {
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "instruction": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 600
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "instruction"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "comparison": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 600
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
+                  "executiveSummary",
+                  "overallScore",
+                  "dimensions",
                   "observations",
                   "strengths",
-                  "improvements"
+                  "improvements",
+                  "strongestMoments",
+                  "weakestMoments",
+                  "transcriptEvidence",
+                  "recommendations",
+                  "practiceExercises",
+                  "comparison"
                 ],
                 "additionalProperties": false
               },
