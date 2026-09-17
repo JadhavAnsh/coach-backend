@@ -83,7 +83,14 @@ export const Report = z
     weakestMoments: z.array(Feedback).max(3),
     transcriptEvidence: z.array(Feedback).max(5),
     recommendations: z.array(z.string().min(1).max(500)).max(5),
-    practiceExercises: z.array(z.object({ title: z.string().min(1).max(120), instruction: z.string().min(1).max(600) })).max(5),
+    practiceExercises: z
+      .array(
+        z.object({
+          title: z.string().min(1).max(120),
+          instruction: z.string().min(1).max(600),
+        }),
+      )
+      .max(5),
     comparison: z.string().max(600).nullable(),
   })
   .strict();
@@ -93,6 +100,11 @@ export const Summary = z.object({
   overallWpm: nullable,
   speakingWpm: nullable,
   fillerCount: nullable,
+  averageWordConfidence: nullable,
+  possiblePronunciationIssueCount: nullable,
+  speechRatio: nullable,
+  longPauseCount: nullable,
+  longestPauseSeconds: nullable,
   averageLoudnessDbfs: nullable,
   averagePitchHz: nullable,
   pitchRangeHz: nullable,
@@ -144,6 +156,14 @@ export function summarize(
     ? knownSpeech.reduce((n, m) => n + m.speechMs!, 0) / 1000
     : null;
   const words = transcript.flatMap((t) => t.words);
+  const orderedWords = [...words].sort((a, b) => a.start - b.start);
+  const wordConfidences = orderedWords
+    .map((word) => word.confidence)
+    .filter((confidence) => Number.isFinite(confidence));
+  const pauses = orderedWords
+    .slice(1)
+    .map((word, index) => Math.max(0, word.start - orderedWords[index]!.end))
+    .filter((gap) => gap >= 1.2);
   const pitches = metrics
     .map((m) => m.pitchHz)
     .filter((n): n is number => n !== null);
@@ -176,6 +196,23 @@ export function summarize(
           /^(um|uh|erm|umm|uhh)$/i.test(w.word.replace(/[^a-z]/gi, "")),
         ).length
       : null,
+    averageWordConfidence:
+      transcriptComplete && wordConfidences.length
+        ? mean(wordConfidences)
+        : null,
+    possiblePronunciationIssueCount: transcriptComplete
+      ? orderedWords.filter(
+          (word) =>
+            word.confidence < 0.75 &&
+            word.word.replace(/[^a-z']/gi, "").length >= 3 &&
+            !/^(um|uh|erm|umm|uhh)$/i.test(word.word.replace(/[^a-z]/gi, "")),
+        ).length
+      : null,
+    speechRatio:
+      speech !== null && duration > 0 ? Math.min(1, speech / duration) : null,
+    longPauseCount: transcriptComplete ? pauses.length : null,
+    longestPauseSeconds:
+      transcriptComplete && pauses.length ? Math.max(...pauses) : null,
     averageLoudnessDbfs: mean(metrics.map((m) => m.loudnessDbfs)),
     averagePitchHz: pitchMean,
     pitchRangeHz: pitchRange,

@@ -110,64 +110,34 @@
                   ]
                 },
                 "pitchHz": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "pitchVariation": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "loudnessDbfs": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "loudnessVariation": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "faceDetected": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "handCount": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "shoulderTilt": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "headTilt": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "headTurn": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 },
                 "torsoLean": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
+                  "type": ["number", "null"]
                 }
               },
               "required": [
@@ -186,10 +156,7 @@
             }
           }
         },
-        "required": [
-          "sequence",
-          "windows"
-        ],
+        "required": ["sequence", "windows"],
         "additionalProperties": false
       },
       "Metric": {
@@ -219,64 +186,34 @@
             ]
           },
           "pitchHz": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "pitchVariation": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "loudnessDbfs": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "loudnessVariation": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "faceDetected": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "handCount": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "shoulderTilt": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "headTilt": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "headTurn": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "torsoLean": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           }
         },
         "required": [
@@ -339,23 +276,12 @@
                   "maximum": 1
                 }
               },
-              "required": [
-                "word",
-                "start",
-                "end",
-                "confidence"
-              ],
+              "required": ["word", "start", "end", "confidence"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "segmentId",
-          "start",
-          "end",
-          "text",
-          "words"
-        ],
+        "required": ["segmentId", "start", "end", "text", "words"],
         "additionalProperties": false
       },
       "Report": {
@@ -428,13 +354,7 @@
                   }
                 }
               },
-              "required": [
-                "id",
-                "label",
-                "score",
-                "detail",
-                "evidenceSeconds"
-              ],
+              "required": ["id", "label", "score", "detail", "evidenceSeconds"],
               "additionalProperties": false
             }
           },
@@ -460,10 +380,7 @@
                   }
                 }
               },
-              "required": [
-                "text",
-                "evidenceSeconds"
-              ],
+              "required": ["text", "evidenceSeconds"],
               "additionalProperties": false
             }
           },
@@ -489,10 +406,7 @@
                   }
                 }
               },
-              "required": [
-                "text",
-                "evidenceSeconds"
-              ],
+              "required": ["text", "evidenceSeconds"],
               "additionalProperties": false
             }
           },
@@ -518,10 +432,7 @@
                   }
                 }
               },
-              "required": [
-                "text",
-                "evidenceSeconds"
-              ],
+              "required": ["text", "evidenceSeconds"],
               "additionalProperties": false
             }
           },
@@ -547,10 +458,7 @@
                   }
                 }
               },
-              "required": [
-                "text",
-                "evidenceSeconds"
-              ],
+              "required": ["text", "evidenceSeconds"],
               "additionalProperties": false
             }
           },
@@ -576,10 +484,7 @@
                   }
                 }
               },
-              "required": [
-                "text",
-                "evidenceSeconds"
-              ],
+              "required": ["text", "evidenceSeconds"],
               "additionalProperties": false
             }
           },
@@ -605,10 +510,7 @@
                   }
                 }
               },
-              "required": [
-                "text",
-                "evidenceSeconds"
-              ],
+              "required": ["text", "evidenceSeconds"],
               "additionalProperties": false
             }
           },
@@ -638,10 +540,7 @@
                   "maxLength": 600
                 }
               },
-              "required": [
-                "title",
-                "instruction"
-              ],
+              "required": ["title", "instruction"],
               "additionalProperties": false
             }
           },
@@ -681,100 +580,67 @@
             "type": "number"
           },
           "speechSeconds": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "overallWpm": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "speakingWpm": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "fillerCount": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
+          },
+          "averageWordConfidence": {
+            "type": ["number", "null"]
+          },
+          "possiblePronunciationIssueCount": {
+            "type": ["number", "null"]
+          },
+          "speechRatio": {
+            "type": ["number", "null"]
+          },
+          "longPauseCount": {
+            "type": ["number", "null"]
+          },
+          "longestPauseSeconds": {
+            "type": ["number", "null"]
           },
           "averageLoudnessDbfs": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "averagePitchHz": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "pitchRangeHz": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "pitchVariation": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "voiceVariation": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "faceTracking": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "handUse": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "shoulderTilt": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "headTilt": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "headTurn": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "torsoLean": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "postureMovement": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           }
         },
         "required": [
@@ -783,6 +649,11 @@
           "overallWpm",
           "speakingWpm",
           "fillerCount",
+          "averageWordConfidence",
+          "possiblePronunciationIssueCount",
+          "speechRatio",
+          "longPauseCount",
+          "longestPauseSeconds",
           "averageLoudnessDbfs",
           "averagePitchHz",
           "pitchRangeHz",
@@ -856,29 +727,15 @@
           },
           "captureStatus": {
             "type": "string",
-            "enum": [
-              "recording",
-              "complete"
-            ]
+            "enum": ["recording", "complete"]
           },
           "transcriptionStatus": {
             "type": "string",
-            "enum": [
-              "pending",
-              "streaming",
-              "complete",
-              "failed"
-            ]
+            "enum": ["pending", "streaming", "complete", "failed"]
           },
           "reportStatus": {
             "type": "string",
-            "enum": [
-              "pending",
-              "processing",
-              "complete",
-              "failed",
-              "waiting"
-            ]
+            "enum": ["pending", "processing", "complete", "failed", "waiting"]
           },
           "durationSeconds": {
             "type": "number"
@@ -895,100 +752,67 @@
                     "type": "number"
                   },
                   "speechSeconds": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "overallWpm": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "speakingWpm": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "fillerCount": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
+                  },
+                  "averageWordConfidence": {
+                    "type": ["number", "null"]
+                  },
+                  "possiblePronunciationIssueCount": {
+                    "type": ["number", "null"]
+                  },
+                  "speechRatio": {
+                    "type": ["number", "null"]
+                  },
+                  "longPauseCount": {
+                    "type": ["number", "null"]
+                  },
+                  "longestPauseSeconds": {
+                    "type": ["number", "null"]
                   },
                   "averageLoudnessDbfs": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "averagePitchHz": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "pitchRangeHz": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "pitchVariation": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "voiceVariation": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "faceTracking": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "handUse": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "shoulderTilt": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "headTilt": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "headTurn": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "torsoLean": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "postureMovement": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   }
                 },
                 "required": [
@@ -997,6 +821,11 @@
                   "overallWpm",
                   "speakingWpm",
                   "fillerCount",
+                  "averageWordConfidence",
+                  "possiblePronunciationIssueCount",
+                  "speechRatio",
+                  "longPauseCount",
+                  "longestPauseSeconds",
                   "averageLoudnessDbfs",
                   "averagePitchHz",
                   "pitchRangeHz",
@@ -1120,10 +949,7 @@
                           }
                         }
                       },
-                      "required": [
-                        "text",
-                        "evidenceSeconds"
-                      ],
+                      "required": ["text", "evidenceSeconds"],
                       "additionalProperties": false
                     }
                   },
@@ -1149,10 +975,7 @@
                           }
                         }
                       },
-                      "required": [
-                        "text",
-                        "evidenceSeconds"
-                      ],
+                      "required": ["text", "evidenceSeconds"],
                       "additionalProperties": false
                     }
                   },
@@ -1178,10 +1001,7 @@
                           }
                         }
                       },
-                      "required": [
-                        "text",
-                        "evidenceSeconds"
-                      ],
+                      "required": ["text", "evidenceSeconds"],
                       "additionalProperties": false
                     }
                   },
@@ -1207,10 +1027,7 @@
                           }
                         }
                       },
-                      "required": [
-                        "text",
-                        "evidenceSeconds"
-                      ],
+                      "required": ["text", "evidenceSeconds"],
                       "additionalProperties": false
                     }
                   },
@@ -1236,10 +1053,7 @@
                           }
                         }
                       },
-                      "required": [
-                        "text",
-                        "evidenceSeconds"
-                      ],
+                      "required": ["text", "evidenceSeconds"],
                       "additionalProperties": false
                     }
                   },
@@ -1265,10 +1079,7 @@
                           }
                         }
                       },
-                      "required": [
-                        "text",
-                        "evidenceSeconds"
-                      ],
+                      "required": ["text", "evidenceSeconds"],
                       "additionalProperties": false
                     }
                   },
@@ -1298,10 +1109,7 @@
                           "maxLength": 600
                         }
                       },
-                      "required": [
-                        "title",
-                        "instruction"
-                      ],
+                      "required": ["title", "instruction"],
                       "additionalProperties": false
                     }
                   },
@@ -1385,31 +1193,17 @@
                         "maximum": 1
                       }
                     },
-                    "required": [
-                      "word",
-                      "start",
-                      "end",
-                      "confidence"
-                    ],
+                    "required": ["word", "start", "end", "confidence"],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": [
-                "segmentId",
-                "start",
-                "end",
-                "text",
-                "words"
-              ],
+              "required": ["segmentId", "start", "end", "text", "words"],
               "additionalProperties": false
             }
           },
           "error": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "required": [
