@@ -710,6 +710,18 @@
               "null"
             ]
           },
+          "averagePitchHz": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "pitchRangeHz": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
           "pitchVariation": {
             "type": [
               "number",
@@ -740,6 +752,24 @@
               "null"
             ]
           },
+          "headTilt": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "headTurn": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "torsoLean": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
           "postureMovement": {
             "type": [
               "number",
@@ -754,11 +784,16 @@
           "speakingWpm",
           "fillerCount",
           "averageLoudnessDbfs",
+          "averagePitchHz",
+          "pitchRangeHz",
           "pitchVariation",
           "voiceVariation",
           "faceTracking",
           "handUse",
           "shoulderTilt",
+          "headTilt",
+          "headTurn",
+          "torsoLean",
           "postureMovement"
         ],
         "additionalProperties": false
@@ -889,6 +924,18 @@
                       "null"
                     ]
                   },
+                  "averagePitchHz": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "pitchRangeHz": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "pitchVariation": {
                     "type": [
                       "number",
@@ -919,6 +966,24 @@
                       "null"
                     ]
                   },
+                  "headTilt": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "headTurn": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "torsoLean": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "postureMovement": {
                     "type": [
                       "number",
@@ -933,11 +998,16 @@
                   "speakingWpm",
                   "fillerCount",
                   "averageLoudnessDbfs",
+                  "averagePitchHz",
+                  "pitchRangeHz",
                   "pitchVariation",
                   "voiceVariation",
                   "faceTracking",
                   "handUse",
                   "shoulderTilt",
+                  "headTilt",
+                  "headTurn",
+                  "torsoLean",
                   "postureMovement"
                 ],
                 "additionalProperties": false

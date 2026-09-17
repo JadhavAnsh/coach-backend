@@ -94,11 +94,16 @@ export const Summary = z.object({
   speakingWpm: nullable,
   fillerCount: nullable,
   averageLoudnessDbfs: nullable,
+  averagePitchHz: nullable,
+  pitchRangeHz: nullable,
   pitchVariation: nullable,
   voiceVariation: nullable,
   faceTracking: nullable,
   handUse: nullable,
   shoulderTilt: nullable,
+  headTilt: nullable,
+  headTurn: nullable,
+  torsoLean: nullable,
   postureMovement: nullable,
 });
 export const SessionView = CreateSession.extend({
@@ -143,6 +148,8 @@ export function summarize(
     .map((m) => m.pitchHz)
     .filter((n): n is number => n !== null);
   const pitchMean = mean(pitches);
+  const pitchRange =
+    pitches.length > 1 ? Math.max(...pitches) - Math.min(...pitches) : null;
   const pitchVariation =
     pitchMean && pitches.length > 1
       ? Math.sqrt(
@@ -170,10 +177,25 @@ export function summarize(
         ).length
       : null,
     averageLoudnessDbfs: mean(metrics.map((m) => m.loudnessDbfs)),
+    averagePitchHz: pitchMean,
+    pitchRangeHz: pitchRange,
     voiceVariation: mean(metrics.map((m) => m.loudnessVariation)),
     faceTracking: mean(metrics.map((m) => m.faceDetected)),
     handUse: mean(metrics.map((m) => m.handCount)),
-    shoulderTilt: mean(metrics.map((m) => m.shoulderTilt)),
+    shoulderTilt: mean(
+      metrics.map((m) =>
+        m.shoulderTilt == null ? null : Math.abs(m.shoulderTilt),
+      ),
+    ),
+    headTilt: mean(
+      metrics.map((m) => (m.headTilt == null ? null : Math.abs(m.headTilt))),
+    ),
+    headTurn: mean(
+      metrics.map((m) => (m.headTurn == null ? null : Math.abs(m.headTurn))),
+    ),
+    torsoLean: mean(
+      metrics.map((m) => (m.torsoLean == null ? null : Math.abs(m.torsoLean))),
+    ),
     pitchVariation,
     postureMovement:
       turns.length > 1
