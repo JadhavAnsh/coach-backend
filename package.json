@@ -3,13 +3,21 @@
   "version": "1.0.50",
   "scripts": {
     "test": "bun test --preload ./tests/setup.ts tests",
+    "test:unit": "bun test --preload ./tests/setup.ts tests/contracts.test.ts",
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.core.json --pretty false",
     "worker": "bun run src/worker.ts",
     "contracts": "bun run scripts/generate-contracts.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "prepare": "husky",
+    "precommit": "lint-staged && bun run format:check && bun run lint && bun run typecheck && bun run test:unit"
+  },
+  "lint-staged": {
+    "*.{ts,js,mjs,json,md}": "prettier --write",
+    "*.ts": "eslint --fix"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.947.0",
@@ -31,7 +39,12 @@
     "@types/ws": "8.18.1",
     "bun-types": "latest",
     "openapi-typescript": "7.13.0",
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.9.6",
+    "typescript-eslint": "^8.48.0",
     "typescript": "5.9.3"
   },
   "module": "src/index.ts"
