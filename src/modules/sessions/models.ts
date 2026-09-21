@@ -4,7 +4,7 @@ import type { SessionInput, MetricWindow, TranscriptSegment, CoachingReport } fr
 export type SessionDoc = SessionInput & { id: string; uid: string; captureStatus: "recording" | "complete"; transcriptionStatus: "pending" | "streaming" | "complete" | "failed";
   reportStatus: "waiting" | "pending" | "processing" | "complete" | "failed"; revision: number; durationSeconds: number; deleted: boolean; error: string | null; processingAt: Date | null; processingId: string | null; transcriptRequestId?: string; createdAt: Date; updatedAt: Date };
 const sessionSchema = new Schema({ id: { type: String, unique: true }, uid: String, clientSessionId: String, title: String, mode: String, startedAt: String, camera: Boolean,
-  schemaVersion: String, analysisVersion: String, modelVersions: Schema.Types.Mixed,
+  schemaVersion: String, analysisVersion: String, modelVersions: Schema.Types.Mixed, fillerVocabulary: [String],
   captureStatus: { type: String, default: "recording" }, transcriptionStatus: { type: String, default: "pending" }, reportStatus: { type: String, default: "waiting" },
   revision: { type: Number, default: 0 }, durationSeconds: { type: Number, default: 0 }, deleted: { type: Boolean, default: false }, error: { type: String, default: null }, processingAt: Date, processingId: String, transcriptRequestId: String }, { timestamps: true });
 sessionSchema.index({ uid: 1, clientSessionId: 1 }, { unique: true }); sessionSchema.index({ uid: 1, createdAt: -1 }); sessionSchema.index({ reportStatus: 1, updatedAt: 1 });

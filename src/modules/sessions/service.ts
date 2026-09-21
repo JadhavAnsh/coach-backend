@@ -13,7 +13,7 @@ export async function view(actor: Actor, id: string): Promise<SessionResult> {
   const [batches, transcript, report] = await Promise.all([m.Metrics.find({ sessionId: id }).sort({ sequence: 1 }).lean(), m.Transcript.find({ sessionId: id, revision: doc.revision }).sort({ start: 1 }).lean(), m.Report.findOne({ sessionId: id, revision: doc.revision }).lean()]);
   await owned(actor,id);
   const windows = batches.flatMap(b=>b.windows);
-  return { ...doc.toObject(), summary: summarize(doc.durationSeconds,windows,transcript,doc.transcriptionStatus === "complete"), transcript, report: report?.report || null };
+  return { ...doc.toObject(), summary: summarize(doc.durationSeconds,windows,transcript,doc.transcriptionStatus === "complete",doc.fillerVocabulary), transcript, report: report?.report || null };
 }
 export async function saveTranscript(actor: Actor, id: string, segments: TranscriptSegment[], replace: boolean, complete: boolean, requestId = "") {
   const m = models(actor.tenant);

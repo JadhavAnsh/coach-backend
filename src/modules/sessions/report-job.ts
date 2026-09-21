@@ -40,6 +40,7 @@ export async function runReport(
       doc.durationSeconds,
       batches.flatMap((b) => b.windows),
       transcript,
+      doc.fillerVocabulary,
     );
     await transaction(async (tx) => {
       const current = await m.Session.findOneAndUpdate(

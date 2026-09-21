@@ -39,6 +39,10 @@ export const CreateSession = z
     schemaVersion: z.literal("1"),
     analysisVersion: z.string().max(100),
     modelVersions: z.record(z.string(), z.string().max(200)),
+    fillerVocabulary: z
+      .array(z.string().trim().min(1).max(40))
+      .max(30)
+      .optional(),
   })
   .strict();
 export const MetricBatch = z
@@ -100,6 +104,13 @@ export const Summary = z.object({
   overallWpm: nullable,
   speakingWpm: nullable,
   fillerCount: nullable,
+  fillerBreakdown: z.record(z.string(), z.number()).nullable(),
+  fillerPer100Words: nullable,
+  fillerRunCount: nullable,
+  pitchRangeSemitones: nullable,
+  monotoneRatio: nullable,
+  longestMonotoneRunSeconds: nullable,
+  longestMonotoneRunStartSecond: nullable,
   averageWordConfidence: nullable,
   possiblePronunciationIssueCount: nullable,
   speechRatio: nullable,
@@ -141,11 +152,152 @@ export type TranscriptSegment = z.infer<typeof Transcript>;
 export type CoachingReport = z.infer<typeof Report>;
 export type SessionInput = z.infer<typeof CreateSession>;
 export type SessionResult = z.infer<typeof SessionView>;
+const UNAMBIGUOUS_FILLERS = new Set(["um", "uh", "erm", "umm", "uhh"]);
+const AMBIGUOUS_FILLERS = new Set(["like", "so", "actually", "basically"]);
+const DEFAULT_FILLER_PHRASES = [
+  ["you", "know"],
+  ["i", "mean"],
+];
+const cleanWord = (word: string) => word.replace(/[^a-z]/gi, "").toLowerCase();
+type OrderedWord = { word: string; start: number; end: number };
+export function detectFillers(
+  orderedWords: OrderedWord[],
+  vocabulary: string[] = [],
+) {
+  const cleaned = orderedWords.map((w) => cleanWord(w.word));
+  const userSingles = new Set<string>();
+  const phrases = [...DEFAULT_FILLER_PHRASES];
+  for (const entry of vocabulary) {
+    const tokens = entry
+      .split(/\s+/)
+      .map(cleanWord)
+      .filter((token) => token.length);
+    if (tokens.length === 1) userSingles.add(tokens[0]!);
+    else if (tokens.length > 1) phrases.push(tokens);
+  }
+  const isFiller = new Array(orderedWords.length).fill(false);
+  const breakdown: Record<string, number> = {};
+  let count = 0;
+  const record = (term: string) => {
+    breakdown[term] = (breakdown[term] || 0) + 1;
+    count++;
+  };
+  const consumed = new Array(orderedWords.length).fill(false);
+  for (let i = 0; i < orderedWords.length; i++) {
+    if (consumed[i]) continue;
+    const phrase = phrases.find((tokens) =>
+      tokens.every((token, offset) => cleaned[i + offset] === token),
+    );
+    if (phrase) {
+      for (let offset = 0; offset < phrase.length; offset++) {
+        consumed[i + offset] = true;
+        isFiller[i + offset] = true;
+      }
+      record(phrase.join(" "));
+    }
+  }
+  for (let i = 0; i < orderedWords.length; i++) {
+    if (consumed[i]) continue;
+    const word = cleaned[i]!;
+    if (UNAMBIGUOUS_FILLERS.has(word) || userSingles.has(word)) {
+      isFiller[i] = true;
+      record(word);
+      continue;
+    }
+    if (AMBIGUOUS_FILLERS.has(word)) {
+      const precedingGap =
+        i > 0 ? orderedWords[i]!.start - orderedWords[i - 1]!.end : Infinity;
+      const followingGap =
+        i < orderedWords.length - 1
+          ? orderedWords[i + 1]!.start - orderedWords[i]!.end
+          : Infinity;
+      if (precedingGap >= 0.4 || followingGap >= 0.4) {
+        isFiller[i] = true;
+        record(word);
+      }
+    }
+  }
+  let runCount = 0;
+  for (let i = 0; i < isFiller.length; i++)
+    if (isFiller[i] && !isFiller[i - 1]) runCount++;
+  return {
+    count,
+    breakdown: count ? breakdown : {},
+    runCount,
+    per100Words: orderedWords.length
+      ? Math.round((count / orderedWords.length) * 1000) / 10
+      : null,
+  };
+}
+export function pitchProsody(metrics: MetricWindow[]) {
+  const voiced = metrics
+    .filter((m) => m.pitchHz !== null)
+    .map((m) => ({ second: m.second, hz: m.pitchHz as number }))
+    .sort((a, b) => a.second - b.second);
+  const hzValues = voiced.map((v) => v.hz);
+  const rangeSemitones =
+    hzValues.length > 1 && Math.min(...hzValues) > 0
+      ? Math.round(
+          (12 * Math.log2(Math.max(...hzValues) / Math.min(...hzValues))) * 10,
+        ) / 10
+      : null;
+  if (voiced.length < 3)
+    return {
+      rangeSemitones,
+      monotoneRatio: null,
+      longestRunSeconds: null,
+      longestRunStartSecond: null,
+    };
+  let monotoneCount = 0,
+    bestRun = 0,
+    bestStart: number | null = null,
+    currentRun = 0,
+    currentStart: number | null = null,
+    previousSecond: number | null = null;
+  for (const sample of voiced) {
+    const windowHz = voiced
+      .filter((other) => Math.abs(other.second - sample.second) <= 4)
+      .map((other) => other.hz);
+    const low = Math.min(...windowHz),
+      high = Math.max(...windowHz);
+    const spread =
+      windowHz.length >= 3 && low > 0 ? 12 * Math.log2(high / low) : null;
+    const isMonotone = spread !== null && spread < 2.5;
+    if (isMonotone) {
+      monotoneCount++;
+      if (
+        previousSecond !== null &&
+        sample.second === previousSecond + 1 &&
+        currentStart !== null
+      )
+        currentRun++;
+      else {
+        currentRun = 1;
+        currentStart = sample.second;
+      }
+      if (currentRun > bestRun) {
+        bestRun = currentRun;
+        bestStart = currentStart;
+      }
+    } else {
+      currentRun = 0;
+      currentStart = null;
+    }
+    previousSecond = sample.second;
+  }
+  return {
+    rangeSemitones,
+    monotoneRatio: Math.round((monotoneCount / voiced.length) * 100) / 100,
+    longestRunSeconds: bestRun >= 3 ? bestRun : null,
+    longestRunStartSecond: bestRun >= 3 ? bestStart : null,
+  };
+}
 export function summarize(
   duration: number,
   metrics: MetricWindow[],
   transcript: TranscriptSegment[],
   transcriptComplete = true,
+  fillerVocabulary: string[] = [],
 ) {
   const mean = (xs: (number | null | undefined)[]) => {
     const v = xs.filter((n): n is number => typeof n === "number");
@@ -170,6 +322,10 @@ export function summarize(
   const pitchMean = mean(pitches);
   const pitchRange =
     pitches.length > 1 ? Math.max(...pitches) - Math.min(...pitches) : null;
+  const prosody = pitchProsody(metrics);
+  const fillers = transcriptComplete
+    ? detectFillers(orderedWords, fillerVocabulary)
+    : null;
   const pitchVariation =
     pitchMean && pitches.length > 1
       ? Math.sqrt(
@@ -191,11 +347,14 @@ export function summarize(
       transcriptComplete && speech && speech > 0
         ? (words.length * 60) / speech
         : null,
-    fillerCount: transcriptComplete
-      ? words.filter((w) =>
-          /^(um|uh|erm|umm|uhh)$/i.test(w.word.replace(/[^a-z]/gi, "")),
-        ).length
-      : null,
+    fillerCount: fillers ? fillers.count : null,
+    fillerBreakdown: fillers ? fillers.breakdown : null,
+    fillerPer100Words: fillers ? fillers.per100Words : null,
+    fillerRunCount: fillers ? fillers.runCount : null,
+    pitchRangeSemitones: prosody.rangeSemitones,
+    monotoneRatio: prosody.monotoneRatio,
+    longestMonotoneRunSeconds: prosody.longestRunSeconds,
+    longestMonotoneRunStartSecond: prosody.longestRunStartSecond,
     averageWordConfidence:
       transcriptComplete && wordConfidences.length
         ? mean(wordConfidences)

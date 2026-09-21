@@ -4,6 +4,8 @@ import {
   Metric,
   Report,
   summarize,
+  detectFillers,
+  pitchProsody,
 } from "../src/contracts/coaching";
 import { normalizeReport } from "../src/providers/feedback";
 describe("coaching contracts", () => {
@@ -50,6 +52,66 @@ describe("coaching contracts", () => {
     );
     expect(s.fillerCount).toBe(1);
     expect(s.overallWpm).toBe(3);
+  });
+  const word = (word: string, start: number, end: number) => ({
+    word,
+    start,
+    end,
+    confidence: 1,
+  });
+  test("detects phrases, guarded ambiguous fillers, and custom vocabulary", () => {
+    // "um, you know, basically this... like this so it is" — pauses before basically and so
+    const fillers = detectFillers(
+      [
+        word("um", 0, 0.3),
+        word("you", 0.4, 0.6),
+        word("know", 0.6, 0.9),
+        word("basically", 1.6, 2.1), // 0.7s pause before -> counts
+        word("this", 2.1, 2.4),
+        word("like", 2.4, 2.7), // no pause either side -> not a filler
+        word("this", 2.7, 3.0),
+        word("so", 3.0, 3.2), // no pause -> not a filler
+        word("it", 3.2, 3.4),
+        word("umm", 3.4, 3.7),
+      ],
+      ["gonna"],
+    );
+    expect(fillers.count).toBe(4); // um, you know, basically, umm
+    expect(fillers.breakdown).toEqual({
+      um: 1,
+      "you know": 1,
+      basically: 1,
+      umm: 1,
+    });
+    expect(fillers.per100Words).toBe(40);
+    const withCustom = detectFillers([word("gonna", 0, 0.4)], ["gonna"]);
+    expect(withCustom.count).toBe(1);
+    expect(withCustom.breakdown).toEqual({ gonna: 1 });
+  });
+  test("derives pitch range in semitones and monotone runs", () => {
+    const octave = pitchProsody([
+      { second: 0, durationMs: 1000, speechMs: 900, pitchHz: 110, pitchVariation: null, loudnessDbfs: -24, shoulderTilt: null, headTilt: null, headTurn: null, torsoLean: null },
+      { second: 1, durationMs: 1000, speechMs: 900, pitchHz: 220, pitchVariation: null, loudnessDbfs: -24, shoulderTilt: null, headTilt: null, headTurn: null, torsoLean: null },
+      { second: 2, durationMs: 1000, speechMs: 900, pitchHz: 165, pitchVariation: null, loudnessDbfs: -24, shoulderTilt: null, headTilt: null, headTurn: null, torsoLean: null },
+    ]);
+    expect(octave.rangeSemitones).toBe(12);
+    const flat = pitchProsody(
+      Array.from({ length: 6 }, (_, second) => ({
+        second,
+        durationMs: 1000,
+        speechMs: 900,
+        pitchHz: 120,
+        pitchVariation: null,
+        loudnessDbfs: -24,
+        shoulderTilt: null,
+        headTilt: null,
+        headTurn: null,
+        torsoLean: null,
+      })),
+    );
+    expect(flat.monotoneRatio).toBe(1);
+    expect(flat.longestRunSeconds).toBe(6);
+    expect(flat.longestRunStartSecond).toBe(0);
   });
   test("summarizes visual report signals without opposite angles cancelling out", () => {
     const base = {
