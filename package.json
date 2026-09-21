@@ -3,7 +3,7 @@
   "version": "1.0.50",
   "scripts": {
     "test": "bun test --preload ./tests/setup.ts tests",
-    "test:unit": "bun test --preload ./tests/setup.ts tests/contracts.test.ts",
+    "test:unit": "bun test --preload ./tests/setup.ts tests/contracts.test.ts tests/coaching-behavior.test.ts tests/session-crypto.test.ts",
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.core.json --pretty false",
