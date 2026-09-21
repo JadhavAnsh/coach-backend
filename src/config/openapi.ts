@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { swagger } from "@elysiajs/swagger";
+import { swagger } from "@elysiajs/swagger"
 
 export const openApiPlugin = swagger({
   path: "/docs",
@@ -17,7 +17,8 @@ export const openApiPlugin = swagger({
       { name: "Health", description: "Liveness and dependency checks" },
       {
         name: "Organisations",
-        description: "Bootstrap a new tenant (superadmin / bootstrap token only)",
+        description:
+          "Bootstrap a new tenant (superadmin / bootstrap token only)",
       },
       {
         name: "Auth",
@@ -53,7 +54,8 @@ export const openApiPlugin = swagger({
           type: "apiKey",
           in: "header",
           name: "auth_token",
-          description: "`ORG_BOOTSTRAP_TOKEN` — required only for `POST /api/v1/organisations`",
+          description:
+            "`ORG_BOOTSTRAP_TOKEN` — required only for `POST /api/v1/organisations`",
         },
       },
       schemas: {
@@ -85,4 +87,4 @@ export const openApiPlugin = swagger({
       },
     },
   },
-});
+})

@@ -1,12 +1,12 @@
-import mongoose from "mongoose";
-import { env } from "../config/env";
-import { attachMongoListeners } from "../common/config/mongo-connection";
+import mongoose from "mongoose"
+import { env } from "../config/env"
+import { attachMongoListeners } from "../common/config/mongo-connection"
 
-let connected = false;
+let connected = false
 
 export async function connectMongo() {
-  if (connected) return;
-  attachMongoListeners();
+  if (connected) return
+  attachMongoListeners()
   await mongoose.connect(env.MONGO_URI, {
     maxPoolSize: 10,
     minPoolSize: 2,
@@ -16,12 +16,12 @@ export async function connectMongo() {
     socketTimeoutMS: 45000,
     retryWrites: true,
     retryReads: true,
-  });
-  connected = true;
+  })
+  connected = true
 }
 
 export async function disconnectMongo() {
-  if (!connected) return;
-  await mongoose.disconnect();
-  connected = false;
+  if (!connected) return
+  await mongoose.disconnect()
+  connected = false
 }

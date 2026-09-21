@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from "zod"
 
-const empty = z.string().optional().default("");
+const empty = z.string().optional().default("")
 
 export const env = z
   .object({
@@ -43,6 +43,6 @@ export const env = z
     MAILER_API_TOKEN: empty,
     FROM_EMAIL: empty,
   })
-  .parse(process.env);
+  .parse(process.env)
 
-export const isProd = env.NODE_ENV === "production";
+export const isProd = env.NODE_ENV === "production"

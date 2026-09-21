@@ -1,9 +1,9 @@
-import { getUserModel } from "../../db/tenant-model";
-import { IUserRole } from "../../common/schema/enum";
-import { AppError } from "../../common/filters/http-exception";
-import { setUserRolesCache } from "../../common/guards/roles";
-import type { UserDoc } from "../../db/models/user";
-import { issueSession, activeUser } from "./session";
+import { getUserModel } from "../../db/tenant-model"
+import { IUserRole } from "../../common/schema/enum"
+import { AppError } from "../../common/filters/http-exception"
+import { setUserRolesCache } from "../../common/guards/roles"
+import type { UserDoc } from "../../db/models/user"
+import { issueSession, activeUser } from "./session"
 
 export function toPublicUser(user: UserDoc) {
   return {
@@ -13,22 +13,22 @@ export function toPublicUser(user: UserDoc) {
     avatar: user.avatar ?? null,
     roles: user.roles,
     is_active: user.is_active,
-  };
+  }
 }
 
 export async function registerUser(
   orgId: string,
   input: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName?: string;
-  },
+    email: string
+    password: string
+    firstName: string
+    lastName?: string
+  }
 ) {
-  const User = getUserModel(orgId);
-  const email = input.email.toLowerCase();
+  const User = getUserModel(orgId)
+  const email = input.email.toLowerCase()
   if (await User.findOne({ email })) {
-    throw new AppError(409, "User is already present", "USER_EXISTS");
+    throw new AppError(409, "User is already present", "USER_EXISTS")
   }
 
   const user = await User.create({
@@ -36,59 +36,59 @@ export async function registerUser(
     passwordHash: await Bun.password.hash(input.password),
     name: { first: input.firstName, last: input.lastName ?? "" },
     roles: [IUserRole.member],
-  });
+  })
 
-  await setUserRolesCache(orgId, user.uid, [IUserRole.member]);
-  const session = await issueSession(orgId, user.uid);
-  return { ...session, user: toPublicUser(user) };
+  await setUserRolesCache(orgId, user.uid, [IUserRole.member])
+  const session = await issueSession(orgId, user.uid)
+  return { ...session, user: toPublicUser(user) }
 }
 
 export async function signInUser(
   orgId: string,
-  input: { email: string; password: string },
+  input: { email: string; password: string }
 ) {
-  const User = getUserModel(orgId);
-  const user = await User.findOne({ email: input.email.toLowerCase() });
+  const User = getUserModel(orgId)
+  const user = await User.findOne({ email: input.email.toLowerCase() })
   if (!user?.passwordHash) {
-    throw new AppError(401, "Invalid email or password", "INVALID_CREDENTIALS");
+    throw new AppError(401, "Invalid email or password", "INVALID_CREDENTIALS")
   }
   if (!user.is_active) {
-    throw new AppError(403, "User is not active", "USER_INACTIVE");
+    throw new AppError(403, "User is not active", "USER_INACTIVE")
   }
-  const ok = await Bun.password.verify(input.password, user.passwordHash);
+  const ok = await Bun.password.verify(input.password, user.passwordHash)
   if (!ok) {
-    throw new AppError(401, "Invalid email or password", "INVALID_CREDENTIALS");
+    throw new AppError(401, "Invalid email or password", "INVALID_CREDENTIALS")
   }
-  const session = await issueSession(orgId, user.uid);
-  return { ...session, user: toPublicUser(user) };
+  const session = await issueSession(orgId, user.uid)
+  return { ...session, user: toPublicUser(user) }
 }
 
 export async function accountExists(orgId: string, email: string) {
-  const User = getUserModel(orgId);
-  return Boolean(await User.exists({ email: email.toLowerCase() }));
+  const User = getUserModel(orgId)
+  return Boolean(await User.exists({ email: email.toLowerCase() }))
 }
 
 export async function getMe(orgId: string, uid: string) {
-  return toPublicUser(await activeUser(orgId, uid));
+  return toPublicUser(await activeUser(orgId, uid))
 }
 
 export async function upsertOAuthUser(
   orgId: string,
   input: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    avatar?: string;
-    provider: string;
-    providerId: string;
-  },
+    email: string
+    firstName: string
+    lastName: string
+    avatar?: string
+    provider: string
+    providerId: string
+  }
 ) {
   if (!input.email) {
-    throw new AppError(400, "OAuth email is required", "OAUTH_EMAIL_REQUIRED");
+    throw new AppError(400, "OAuth email is required", "OAUTH_EMAIL_REQUIRED")
   }
-  const User = getUserModel(orgId);
-  const email = input.email.toLowerCase();
-  let user = await User.findOne({ email });
+  const User = getUserModel(orgId)
+  const email = input.email.toLowerCase()
+  let user = await User.findOne({ email })
   if (!user) {
     user = await User.create({
       email,
@@ -96,25 +96,25 @@ export async function upsertOAuthUser(
       avatar: input.avatar,
       accounts: [{ provider: input.provider, providerId: input.providerId }],
       roles: [IUserRole.member],
-    });
-    await setUserRolesCache(orgId, user.uid, [IUserRole.member]);
+    })
+    await setUserRolesCache(orgId, user.uid, [IUserRole.member])
   } else {
     if (!user.is_active) {
-      throw new AppError(403, "User is not active", "USER_INACTIVE");
+      throw new AppError(403, "User is not active", "USER_INACTIVE")
     }
     const has = user.accounts.some(
-      (a) => a.provider === input.provider && a.providerId === input.providerId,
-    );
+      (a) => a.provider === input.provider && a.providerId === input.providerId
+    )
     if (!has) {
       user.accounts.push({
         provider: input.provider,
         providerId: input.providerId,
-      });
+      })
     }
-    if (!user.avatar && input.avatar) user.avatar = input.avatar;
-    if (!user.name.first && input.firstName) user.name.first = input.firstName;
-    await user.save();
+    if (!user.avatar && input.avatar) user.avatar = input.avatar
+    if (!user.name.first && input.firstName) user.name.first = input.firstName
+    await user.save()
   }
-  const session = await issueSession(orgId, user.uid);
-  return { ...session, user: toPublicUser(user) };
+  const session = await issueSession(orgId, user.uid)
+  return { ...session, user: toPublicUser(user) }
 }

@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { cors } from "@elysiajs/cors";
-import { env, isProd } from "./env";
+import { cors } from "@elysiajs/cors"
+import { env, isProd } from "./env"
 
 const origins = env.CORS_ORIGINS.split(",")
   .map((o) => o.trim())
-  .filter(Boolean);
+  .filter(Boolean)
 
 export const corsPlugin = cors({
   origin: isProd ? origins : true,
@@ -19,4 +19,4 @@ export const corsPlugin = cors({
     "x-bootstrap-token",
   ],
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-});
+})

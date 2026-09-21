@@ -1,5 +1,5 @@
-import Redis from "ioredis";
-import { env } from "../config/env";
+import Redis from "ioredis"
+import { env } from "../config/env"
 
 export const redis = new Redis({
   host: env.REDIS_HOST,
@@ -10,36 +10,36 @@ export const redis = new Redis({
   commandTimeout: 3000,
   maxRetriesPerRequest: 1,
   retryStrategy: () => 2000,
-});
-redis.on("error", () => console.warn("Redis unavailable"));
+})
+redis.on("error", () => console.warn("Redis unavailable"))
 export const key = (...parts: string[]) =>
-  ["coach", env.NODE_ENV, ...parts].join(":");
+  ["coach", env.NODE_ENV, ...parts].join(":")
 export const redisCache = {
   async get(k: string) {
     try {
-      return await redis.get(key("cache", k));
+      return await redis.get(key("cache", k))
     } catch {
-      return null;
+      return null
     }
   },
   async set(k: string, v: string, ttl = 300) {
     try {
-      await redis.set(key("cache", k), v, "EX", ttl);
+      await redis.set(key("cache", k), v, "EX", ttl)
     } catch {
       /* Optional cache. */
     }
   },
   async del(k: string) {
     try {
-      await redis.del(key("cache", k));
+      await redis.del(key("cache", k))
     } catch {
       /* Optional cache. */
     }
   },
   async setRequired(k: string, v: string, ttl: number) {
-    await redis.set(key(k), v, "EX", ttl);
+    await redis.set(key(k), v, "EX", ttl)
   },
   async take(k: string) {
-    return redis.getdel(key(k));
+    return redis.getdel(key(k))
   },
-};
+}

@@ -1,16 +1,16 @@
-import { env, isProd } from "../../config/env";
+import { env, isProd } from "../../config/env"
 
 export function parseCookies(header?: string | null) {
-  const out: Record<string, string> = {};
-  if (!header) return out;
+  const out: Record<string, string> = {}
+  if (!header) return out
   for (const part of header.split(";")) {
-    const idx = part.indexOf("=");
-    if (idx === -1) continue;
-    const key = part.slice(0, idx).trim();
-    const value = part.slice(idx + 1).trim();
-    out[key] = decodeURIComponent(value);
+    const idx = part.indexOf("=")
+    if (idx === -1) continue
+    const key = part.slice(0, idx).trim()
+    const value = part.slice(idx + 1).trim()
+    out[key] = decodeURIComponent(value)
   }
-  return out;
+  return out
 }
 
 export function cookieOptions(maxAge = 900) {
@@ -21,48 +21,48 @@ export function cookieOptions(maxAge = 900) {
     secure: isProd,
     maxAge,
     ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
-  };
+  }
 }
 
 export function serializeCookie(
   name: string,
   value: string,
-  opts: ReturnType<typeof cookieOptions> = cookieOptions(),
+  opts: ReturnType<typeof cookieOptions> = cookieOptions()
 ) {
-  const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${opts.path}`];
-  if (opts.httpOnly) parts.push("HttpOnly");
-  if (opts.secure) parts.push("Secure");
-  if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`);
-  if (opts.maxAge !== undefined) parts.push(`Max-Age=${opts.maxAge}`);
-  if (opts.domain) parts.push(`Domain=${opts.domain}`);
-  return parts.join("; ");
+  const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${opts.path}`]
+  if (opts.httpOnly) parts.push("HttpOnly")
+  if (opts.secure) parts.push("Secure")
+  if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`)
+  if (opts.maxAge !== undefined) parts.push(`Max-Age=${opts.maxAge}`)
+  if (opts.domain) parts.push(`Domain=${opts.domain}`)
+  return parts.join("; ")
 }
 
 export function serializeClearCookie(name: string) {
-  return serializeCookie(name, "", { ...cookieOptions(), maxAge: 0 });
+  return serializeCookie(name, "", { ...cookieOptions(), maxAge: 0 })
 }
 
 export function appendSetCookie(
   set: { headers: Record<string, unknown> },
-  value: string,
+  value: string
 ) {
-  const current = set.headers["Set-Cookie"] ?? set.headers["set-cookie"];
+  const current = set.headers["Set-Cookie"] ?? set.headers["set-cookie"]
   if (!current) {
-    set.headers["Set-Cookie"] = value;
-    return;
+    set.headers["Set-Cookie"] = value
+    return
   }
-  const list = Array.isArray(current) ? current.map(String) : [String(current)];
-  set.headers["Set-Cookie"] = [...list, value];
+  const list = Array.isArray(current) ? current.map(String) : [String(current)]
+  set.headers["Set-Cookie"] = [...list, value]
 }
 
 export function authCookieName(orgId: string) {
-  return `auth_token_${orgId}`;
+  return `auth_token_${orgId}`
 }
 
 export function readAuthToken(
   cookies: Record<string, string>,
   headers: Record<string, string | undefined>,
-  orgId: string,
+  orgId: string
 ) {
   return (
     cookies[authCookieName(orgId)] ||
@@ -70,5 +70,5 @@ export function readAuthToken(
     headers.auth_token ||
     headers.authorization?.replace(/^Bearer /i, "") ||
     ""
-  );
+  )
 }

@@ -10,4 +10,4 @@ export const RoleHierarchy: Record<IUserRole, number> = {
   [IUserRole.owner]: 3,
   [IUserRole.admin]: 2,
   [IUserRole.member]: 1,
-};
+}

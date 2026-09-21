@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose";
-import { randomUidPlugin } from "../../common/plugins/mongo-random-uid.plugin";
+import mongoose, { Schema } from "mongoose"
+import { randomUidPlugin } from "../../common/plugins/mongo-random-uid.plugin"
 
 const OrganisationSchema = new Schema(
   {
@@ -14,18 +14,18 @@ const OrganisationSchema = new Schema(
       name: { type: String, required: true },
     },
   },
-  { timestamps: true },
-);
+  { timestamps: true }
+)
 
-OrganisationSchema.plugin(randomUidPlugin("org"));
+OrganisationSchema.plugin(randomUidPlugin("org"))
 OrganisationSchema.pre("validate", function (next) {
-  if (!this.organisation_uid && this.uid) this.organisation_uid = this.uid;
-  next();
-});
+  if (!this.organisation_uid && this.uid) this.organisation_uid = this.uid
+  next()
+})
 
 export type Organisation = mongoose.InferSchemaType<typeof OrganisationSchema> &
-  mongoose.Document;
+  mongoose.Document
 
 export const OrganisationModel =
   mongoose.models.Organisation ||
-  mongoose.model("Organisation", OrganisationSchema);
+  mongoose.model("Organisation", OrganisationSchema)

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.tsbuildinfo
+coaching.openapi.json
+bun.lock
+skills-lock.json
+.codex/
+.code-review-graph/

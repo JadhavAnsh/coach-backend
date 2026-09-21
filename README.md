@@ -20,20 +20,20 @@ bun run dev
 
 Default port: **8000** (`PORT`).
 
-| URL | Purpose |
-|-----|---------|
-| http://localhost:8000/docs | Interactive OpenAPI (Scalar) |
-| http://localhost:8000/docs/openapi.json | OpenAPI 3 JSON |
-| http://localhost:8000/api/v1/health | Health + Mongo status |
+| URL                                     | Purpose                      |
+| --------------------------------------- | ---------------------------- |
+| http://localhost:8000/docs              | Interactive OpenAPI (Scalar) |
+| http://localhost:8000/docs/openapi.json | OpenAPI 3 JSON               |
+| http://localhost:8000/api/v1/health     | Health + Mongo status        |
 
 ## Environment (important)
 
-| Variable | Role |
-|----------|------|
-| `API_KEY` | Required on almost all `/api/v1/*` routes (header `api_key`) |
+| Variable              | Role                                                                         |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `API_KEY`             | Required on almost all `/api/v1/*` routes (header `api_key`)                 |
 | `ORG_BOOTSTRAP_TOKEN` | One-time bootstrap; header `auth_token` on `POST /api/v1/organisations` only |
-| `JWT_SECRET` | Signs access tokens (7d) |
-| `CORS_ORIGINS` | Comma-separated frontend origins |
+| `JWT_SECRET`          | Signs access tokens (7d)                                                     |
+| `CORS_ORIGINS`        | Comma-separated frontend origins                                             |
 
 Never commit real `.env` values or expose `ORG_BOOTSTRAP_TOKEN` / `API_KEY` to clients you do not control.
 
@@ -62,7 +62,7 @@ All JSON success bodies are wrapped:
 {
   "success": true,
   "message": "Request successful",
-  "data": { }
+  "data": {}
 }
 ```
 

@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { Elysia } from "elysia";
-import { resolveTenant } from "../common/middlewares/organisation";
+import { Elysia } from "elysia"
+import { resolveTenant } from "../common/middlewares/organisation"
 
-export const tenantPlugin = new Elysia({ name: "tenant" }).derive(
-  async ({ path, request, query, headers, set }) => {
+export const tenantPlugin = new Elysia({ name: "tenant" })
+  .derive(async ({ path, request, query, headers, set }) => {
     const result = await resolveTenant({
       path,
       method: request.method,
@@ -11,11 +11,10 @@ export const tenantPlugin = new Elysia({ name: "tenant" }).derive(
       query: query as Record<string, unknown>,
       cookieHeader: request.headers.get("cookie"),
       set,
-    });
+    })
     return {
       organisationId: result.organisationId,
       redirectUrl: "redirectUrl" in result ? result.redirectUrl || "" : "",
-    };
-  },
-)
-  .as("scoped");
+    }
+  })
+  .as("scoped")

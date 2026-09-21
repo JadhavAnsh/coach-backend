@@ -1,5 +1,5 @@
-import { S3Client } from "@aws-sdk/client-s3";
-import { env } from "../../config/env";
+import { S3Client } from "@aws-sdk/client-s3"
+import { env } from "../../config/env"
 
 export const r2Client = new S3Client({
   region: "auto",
@@ -11,4 +11,4 @@ export const r2Client = new S3Client({
     secretAccessKey: env.R2_SECRET_ACCESS_KEY || "local",
   },
   forcePathStyle: true,
-});
+})
